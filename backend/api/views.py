@@ -13,19 +13,19 @@ from rest_framework.permissions import (SAFE_METHODS, AllowAny,
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
+from api.filters import IngredientFilter, RecipeFilter
+from api.pagination import CustomPagination
+from api.permissions import IsAuthorOrReadOnly
+from api.serializers import (AvatarSerializer, CustomUserGetSerializer,
+                             CustomUserSerializer, FavoriteSerializer,
+                             IngredientSerializer, RecipeCreateSerializer,
+                             RecipeGetSerializer, ShoppingCartSerializer,
+                             SubscriptionGetSerializer, SubscriptionSerializer,
+                             TagSerializer)
 from foodgram.constants import NULL
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import CustomUser, Subscription
-from .filters import IngredientFilter, RecipeFilter
-from .pagination import CustomPagination
-from .permissions import IsAuthorOrReadOnly
-from .serializers import (AvatarSerializer, CustomUserGetSerializer,
-                          CustomUserSerializer, FavoriteSerializer,
-                          IngredientSerializer, RecipeCreateSerializer,
-                          RecipeGetSerializer, ShoppingCartSerializer,
-                          SubscriptionGetSerializer, SubscriptionSerializer,
-                          TagSerializer)
 
 
 class UserViewSet(ViewSet):

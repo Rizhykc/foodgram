@@ -5,7 +5,7 @@ from django.db import models
 
 from foodgram.constants import MAX_TEXT_LENGTH, TEXT_LENGTH
 
-from .manager import CustomUserManager
+from users.manager import CustomUserManager
 
 
 class CustomUser(AbstractUser):
