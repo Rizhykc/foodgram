@@ -1,5 +1,3 @@
-version: '3.3'
-
 volumes:
   media: null
   pg_data: null
@@ -28,6 +26,7 @@ services:
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/frontend_static
+      - /var/www/foodgram/media/:/app/media/
 
   gateway:
     image: hikari393/foodgram_gateway
