@@ -2,7 +2,7 @@ from io import BytesIO
 
 from django.db.models import Count, Exists, OuterRef, Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as ViewSet
 from rest_framework import status, viewsets
@@ -29,7 +29,7 @@ from users.models import CustomUser, Subscription
 
 
 class UserViewSet(ViewSet):
-
+    """Вьюсет для работы с пользователями."""
     queryset = CustomUser.objects.annotate(recipes_count=Count('recipes'))
     serializer_class = CustomUserSerializer
     pagination_class = CustomPagination
@@ -48,10 +48,11 @@ class UserViewSet(ViewSet):
         url_name='me'
     )
     def me(self, request):
-        """Возвращает информацию о пользователе."""
-        return Response(CustomUserGetSerializer(
+        serializer = CustomUserGetSerializer(
             request.user,
-            context={'request': request}).data, status=status.HTTP_200_OK)
+            context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         methods=['PUT'],
@@ -81,7 +82,7 @@ class UserViewSet(ViewSet):
         url_path='subscriptions',
         url_name='subscriptions',
     )
-    def get_subscriptions(self, request):
+    def subscriptions(self, request):
         """Получить список подписок пользователя."""
         user = request.user
         subscriptions = Subscription.objects.filter(subscriber=user)
@@ -97,7 +98,7 @@ class UserViewSet(ViewSet):
         url_path='subscribe',
         permission_classes=[IsAuthenticated],
     )
-    def add_delete_subscription(self, request, id):
+    def subscribe(self, request, id):
         """Подписаться или отписаться от автора."""
         user = request.user
         if request.method == 'POST':
@@ -144,11 +145,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
-    search_fields = ('^name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-
+    """Вьюсет для работы с рецептами."""
     permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
     queryset = (
         Recipe.objects.select_related('author')
@@ -156,7 +156,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
-    filter_class = RecipeFilter
+    filterset_class = RecipeFilter
 
     def perform_create(self, serializer):
         """Сохраняет рецепт с указанием автора."""
@@ -299,3 +299,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             {'short-link': request.build_absolute_uri(rev_link)},
             status=status.HTTP_200_OK
         )
+
+
+def short_url(request, short_link):
+    """Редирект с короткой ссылки."""
+    link = request.build_absolute_uri()
+    recipe = get_object_or_404(Recipe, short_link=link)
+    return redirect(
+        'api:recipe-detail',
+        pk=recipe.id
+    )

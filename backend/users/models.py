@@ -4,7 +4,6 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 from foodgram.constants import MAX_TEXT_LENGTH, TEXT_LENGTH
-
 from users.manager import CustomUserManager
 
 

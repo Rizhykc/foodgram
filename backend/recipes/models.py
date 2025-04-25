@@ -2,7 +2,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from foodgram.constants import (MAX_NAME_LENGTH, MAX_TAG, MAX_UNIT, MIN_UNIT,
-                                NAME_INGR)
+                                NAME_INGR, SHORT_LINK)
 from users.models import CustomUser
 
 
@@ -32,8 +32,7 @@ class Ingredient(models.Model):
     """Модель ингридиентов."""
     name = models.CharField(
         max_length=NAME_INGR,
-        verbose_name='Название ингридиента',
-        db_index=True
+        verbose_name='Название ингридиента'
     )
     measurement_unit = models.CharField(
         max_length=MAX_UNIT,
@@ -41,8 +40,16 @@ class Ingredient(models.Model):
     )
 
     class Meta():
+        default_related_name = 'ingredients'
         verbose_name = 'Ингридиенты'
         verbose_name_plural = 'Ингридиенты'
+        ordering = ('name',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ingredient'
+            )
+        ]
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
@@ -83,6 +90,13 @@ class Recipe(models.Model):
         verbose_name='Дата публикации',
         auto_now_add=True
     )
+    short_link = models.CharField(
+        verbose_name='Короткая ссылка',
+        max_length=SHORT_LINK,
+        blank=True,
+        unique=True,
+        null=True
+    )
 
     class Meta:
         ordering = ('-pub_date',)
@@ -91,7 +105,7 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return self.name
+        return f'{self.name}, Автор: {self.author}'
 
 
 class RecipeIngredient(models.Model):
@@ -108,20 +122,14 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(MIN_UNIT,)],
-        verbose_name='Количество ингредиента'
+        verbose_name='Количество ингредиентов'
     )
 
     class Meta:
-        ordering = ('-id', )
+        ordering = ('ingredient', )
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты рецепта'
-        default_related_name = 'recipe_ingredient'
-        constraints = [
-            models.UniqueConstraint(
-                fields=('ingredient', 'recipe'),
-                name='unique_recipe_ingredient'
-            )
-        ]
+        default_related_name = 'recipe_ingredients'
 
     def __str__(self):
         return f'Ингредиенты для рецепта {self.recipe}'

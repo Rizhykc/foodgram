@@ -1,12 +1,13 @@
 from django.contrib import admin
 
+from foodgram.constants import NULL
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 
 
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
-    extra = 1
+    extra = NULL
 
 
 @admin.register(Recipe)
@@ -28,7 +29,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'color', 'slug')
+    list_display = ('name', 'slug')
     search_fields = ('name', 'slug')
     list_filter = ('name', )
     empty_value_display = '-пусто-'
