@@ -1,35 +1,23 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.core.validators import RegexValidator
 from django.db import models
 
 from foodgram.constants import MAX_TEXT_LENGTH, TEXT_LENGTH
-from users.manager import CustomUserManager
+from users.manager import UserAccountManager
+from users.validators import validate_name
 
 
 class CustomUser(AbstractUser):
-    """Кастомная модель пользователя с дополнительными полями."""
+    """Кастомная модель пользователя."""
     first_name = models.CharField(
         verbose_name='Имя',
         max_length=TEXT_LENGTH,
-        validators=[
-            RegexValidator(
-                regex=r'^[А-Яа-яЁёA-Za-z]+$',
-                message='Поле должно содержать только буквы',
-                code='invalid_name',
-            ),
-        ],
+        validators=[validate_name],
     )
     last_name = models.CharField(
         verbose_name='Фамилия',
         max_length=TEXT_LENGTH,
-        validators=[
-            RegexValidator(
-                regex=r'^[А-Яа-яЁёA-Za-z]+$',
-                message='Поле должно содержать только буквы',
-                code='invalid_name',
-            ),
-        ],
+        validators=[validate_name],
     )
     username = models.CharField(
         verbose_name='Никнейм',
@@ -45,13 +33,17 @@ class CustomUser(AbstractUser):
         max_length=MAX_TEXT_LENGTH,
         unique=True
     )
-    avatar = models.ImageField('Аватар', upload_to='users/',
-                               blank=True, null=True)
+    avatar = models.ImageField(
+        verbose_name='Аватар',
+        upload_to='users/',
+        blank=True,
+        null=True
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name', )
 
-    objects = CustomUserManager()
+    objects = UserAccountManager()
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -80,19 +72,20 @@ class Subscription(models.Model):
         CustomUser,
         on_delete=models.CASCADE,
         verbose_name='Автор',
-        related_name='subscribing'
+        related_name='subscriptions'
     )
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
         verbose_name='Подписчик',
-        related_name='subscriber'
+        related_name='subscribers'
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        ordering = ('user',)
+        ordering = ('-created_at',)
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'author'],

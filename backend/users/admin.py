@@ -6,7 +6,6 @@ from users.models import CustomUser, Subscription
 
 @admin.register(CustomUser)
 class UserAdmin(UserAdmin):
-
     list_display = (
         'id',
         'username',
@@ -24,7 +23,13 @@ class UserAdmin(UserAdmin):
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'author')
-    search_fields = ('user', 'author')
+    search_fields = (
+        'author__username',
+        'author__email',
+        'user__username',
+        'user__email'
+    )
+    list_filter = ('author__username', 'user__username')
 
 
 admin.site.empty_value_display = '-пусто-'

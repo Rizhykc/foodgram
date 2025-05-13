@@ -112,7 +112,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/var/www/foodgram/media'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -130,15 +130,16 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.CustomUser'
 
 DJOSER = {
+    'USER_ID_FIELD': 'id',
     'LOGIN_FIELD': 'email',
-    'HIDE_USERS': False,
     'SERIALIZERS': {
-        'user_create': 'api.serializers.CustomUserSerializer',
-        'user': 'api.serializers.CustomUserGetSerializer',
-        'current_user': 'api.serializers.CustomUserGetSerializer',
+        'user_create': 'users.serializers.CustomUserCreateSerializer',
+        'user': 'users.serializers.CustomUserSerializer',
+        'current_user': 'users.serializers.CustomUserSerializer',
     },
     'PERMISSIONS': {
         'user': ('rest_framework.permissions.IsAuthenticatedOrReadOnly',),
         'user_list': ('rest_framework.permissions.AllowAny',),
-    }
+    },
+    'HIDE_USERS': False,
 }

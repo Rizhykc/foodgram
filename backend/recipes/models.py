@@ -22,7 +22,7 @@ class Tag(models.Model):
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
-        ordering = ('name',)
+        ordering = ('-name',)
 
     def __str__(self):
         return self.name
@@ -78,7 +78,7 @@ class Recipe(models.Model):
         through='RecipeIngredient',
         verbose_name='Ингредиенты'
     )
-    tags = models.ManyToManyField(
+    tag = models.ManyToManyField(
         Tag,
         verbose_name='Теги'
     )
@@ -186,4 +186,4 @@ class ShoppingCart(BaseFavoriteShoppingCart):
         )
 
     def __str__(self):
-        return f'Список покупок{self.user} для рецепта {self.recipe}'
+        return f'Список покупок {self.user} для рецепта {self.recipe}'

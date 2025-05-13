@@ -8,47 +8,87 @@ from recipes.models import Ingredient, Tag
 
 
 class Command(BaseCommand):
-    """Автоматически заполняем базу данных списками ингредиентов и тегов"""
+    """
+    Кастомная команда для загрузки данных из CSV-файлов
+    в модели Ingredient и Tag.
+    Реализует автоматическое заполнение базы данных.
+    """
 
-    help = 'Загрузка данных из CSV-файлов в базу данных'
+    help = 'Заполняет базу данных ингредиентами и тегами из CSV'
 
-    def load_data_from_csv(self, file_path, model, field_mapping):
-        objects_to_create = []
+    def _process_csv_file(self, file_path, model_class, fields_map):
+        """Внутренний метод для обработки CSV файла и создания записей."""
+        items_to_create = []
+        existing_count = 0
+
         try:
-            with open(file_path, encoding='utf-8') as csv_file:
-                csv_reader = reader(csv_file)
-                for row in csv_reader:
-                    data = {
-                        field: row[index].strip()
-                        for index, field in field_mapping.items()
+            with open(file_path, mode='r', encoding='utf-8') as file:
+                csv_data = reader(file)
+                for record in csv_data:
+                    if not record:
+                        continue
+                    item_data = {
+                        field: record[i].strip()
+                        for i, field in fields_map.items()
                     }
-                    objects_to_create.append(model(**data))
-            model.objects.bulk_create(objects_to_create)
+                    if model_class == Ingredient:
+                        exists = model_class.objects.filter(
+                            name=item_data['name'],
+                            measurement_unit=item_data['measurement_unit']
+                        ).exists()
+                    elif model_class == Tag:
+                        exists = model_class.objects.filter(
+                            slug=item_data['slug']
+                        ).exists()
+
+                    if not exists:
+                        items_to_create.append(model_class(**item_data))
+                    else:
+                        existing_count += 1
+
+            model_class.objects.bulk_create(items_to_create)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'Данные в {model.__name__} загружены!'
-                )
-            )
-        except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(
-                    f'Ошибка при обработке файла {file_path}: {e}'
+                    f'Загружено {len(items_to_create)}'
+                    f'в {model_class.__name__}. '
+                    f'Пропущено {existing_count} существующих записей.'
                 )
             )
 
-    def handle(self, *args, **options):
-        """Чтение ingredients.csv и tags.csv и их загрузка в базу данных."""
-        ingredients_file_path = os.path.join(
-            settings.BASE_DIR, 'data', 'ingredients.csv'
+        except FileNotFoundError:
+            self.stdout.write(self.style.ERROR(f'Файл не найден: {file_path}'))
+        except Exception as error:
+            self.stdout.write(self.style.ERROR(f'Ошибка: {str(error)}'))
+
+    def handle(self, *args, **kwargs):
+        """
+        Основной метод, вызываемый при выполнении команды.
+        Обрабатывает файлы ingredients.csv и tags.csv.
+        """
+        ingredients_path = os.path.join(
+            settings.BASE_DIR,
+            'data',
+            'ingredients.csv'
         )
-        self.load_data_from_csv(
-            file_path=ingredients_file_path,
-            model=Ingredient,
-            field_mapping={0: 'name', 1: 'measurement_unit'},
+        self._process_csv_file(
+            file_path=ingredients_path,
+            model_class=Ingredient,
+            fields_map={
+                0: 'name',
+                1: 'measurement_unit'
+            }
         )
-        tags_file_path = os.path.join(settings.BASE_DIR, 'data', 'tags.csv')
-        self.load_data_from_csv(
-            file_path=tags_file_path,
-            model=Tag,
-            field_mapping={0: 'name', 1: 'slug'},
+
+        tags_path = os.path.join(
+            settings.BASE_DIR,
+            'data',
+            'tags.csv'
+        )
+        self._process_csv_file(
+            file_path=tags_path,
+            model_class=Tag,
+            fields_map={
+                0: 'name',
+                1: 'slug'
+            }
         )
