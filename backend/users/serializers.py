@@ -38,7 +38,7 @@ class AvatarSerializer(serializers.ModelSerializer):
         fields = ('avatar',)
 
 
-class CustomUserCreateSerializer(serializers.ModelSerializer):
+class CustomUserCreateSerializer(CreateSerializer):
     """Кастомный сериализатор для регистрации пользователей."""
     password = serializers.CharField(
         write_only=True,
@@ -62,7 +62,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
         return validate_password(self, data)
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(UserSerializer):
     """Кастомный сериализатор для просмотра пользователя."""
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField(allow_null=True, required=False)

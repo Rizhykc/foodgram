@@ -92,8 +92,8 @@ class UserViewSet(
         authors = [subscription.author for subscription in subscriptions]
         page = self.paginate_queryset(authors)
         serializer = SubscriptionGetSerializer(
-            page, 
-            many=True, 
+            page,
+            many=True,
             context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
