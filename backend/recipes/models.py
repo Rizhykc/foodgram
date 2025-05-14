@@ -136,7 +136,7 @@ class RecipeIngredient(models.Model):
 
 
 class BaseFavoriteShoppingCart(models.Model):
-    """Модель избранных рецептов пользователя."""
+    """Базовая модель для избранных рецептов и списка покупок."""
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,

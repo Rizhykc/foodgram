@@ -6,6 +6,7 @@ from recipes.models import Ingredient, Recipe, Tag
 
 
 class RecipeFilter(FilterSet):
+    """Фильтр для рецептов."""
     favorite_filter = BooleanFilter(method='get_favorite_recipes')
     shopping_cart_filter = BooleanFilter(method='get_shopping_cart_recipes')
     tag_filter = ModelMultipleChoiceFilter(
@@ -49,7 +50,7 @@ class RecipeFilter(FilterSet):
 
 
 class IngredientFilter(FilterSet):
-
+    """Фильтр для ингредиектов."""
     name = CharFilter(lookup_expr='istartswith')
 
     class Meta:

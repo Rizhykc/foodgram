@@ -8,7 +8,6 @@ from rest_framework.response import Response
 
 from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrReadOnly
-from foodgram.constants import NULL
 from recipes.filters import IngredientFilter, RecipeFilter
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from recipes.serializers import (FavoriteSerializer, IngredientSerializer,
@@ -161,9 +160,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def get_queryset(self):
-        """"""
+        """"Возвращает queryset рецептов для зарагестрированных юзеров."""
         queryset = Recipe.objects.select_related('author').prefetch_related(
-            'tags', 'recipe_ingredients__ingredient'
+            'tag', 'recipe_ingredients__ingredient'
         )
         user = self.request.user
         if user.is_authenticated:
@@ -188,61 +187,41 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Сохраняет рецепт с указанием автора."""
         serializer.save(author=self.request.user)
 
-    # def add_favorite_cart(self, request, model, pk, serializer):
-    #     message = '{} уже в избранном.'
-    #     user = request.user
-    #     recipe = get_object_or_404(Recipe, id=pk)
-    #     if model.objects.filter(recipe=recipe, user=user).exists():
-    #         return Response(
-    #             {'detail': message.format(recipe.name)},
-    #             status=status.HTTP_400_BAD_REQUEST,
-    #         )
-    #     serializers = serializer(
-    #         data={'recipe': recipe.id, 'user': user.id},
-    #         context={'request': request}
-    #     )
-    #     serializers.is_valid(raise_exception=True)
-    #     serializers.save()
-    #     return Response(
-    #         serializers.data, status=status.HTTP_201_CREATED
-    #     )
-
-    # def delete_favorite_cart(self, request, model, pk):
-    #     user = request.use
-    #     deleted_count, _ = model.objects.filter(
-    #         recipe__id=pk, user=user
-    #     ).delete()
-    #     if deleted_count:
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-    #     return Response({'detail': 'Рецепт не существует'},
-    #                     status=status.HTTP_400_BAD_REQUEST,)
-
-    def _handle_recipe_list_action(self, request, pk, model, serializer_class,
-                                   exists_message, not_found_message):
+    def add_favorite_cart(self, request, model, pk, serializer):
+        """Добавление рецепта из избранных."""
+        message = '{} уже в избранном.'
         user = request.user
-        recipe = get_object_or_404(Recipe, pk=pk)
-        if request.method == 'POST':
-            if model.objects.filter(user=user, recipe=recipe).exists():
-                return Response(
-                    {'detail': exists_message},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer = serializer_class(
-                data={'user': user.id, 'recipe': recipe.id},
-                context={'request': request}
+        recipe = get_object_or_404(Recipe, id=pk)
+        if model.objects.filter(recipe=recipe, user=user).exists():
+            return Response(
+                {'detail': message.format(recipe.name)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            deleted, _ = model.objects.filter(user=user,
-                                              recipe=recipe).delete()
-            if not deleted:
-                return Response(
-                    {'detail': not_found_message},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        serializers = serializer(
+            data={'recipe': recipe.id, 'user': user.id},
+            context={'request': request}
+        )
+        serializers.is_valid(raise_exception=True)
+        serializers.save()
+        return Response(
+            serializers.data, status=status.HTTP_201_CREATED
+        )
+
+    def delete_favorite_cart(self, request, model, pk):
+        """Удаление рецепта из избранных."""
+        user = request.use
+        deleted_count, _ = model.objects.filter(
+            recipe__id=pk, user=user
+        ).delete()
+        if deleted_count:
             return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'Рецепт не существует'},
+                        status=status.HTTP_400_BAD_REQUEST,)
+
+    def _handle_recipe_list_action(self, request, pk, model, serializer):
+        if request.method == 'POST':
+            return self.add_favorite_cart(self, request, model, pk, serializer)
+        return self.delete_favorite_cart(self, request, model, pk, serializer)
 
     @action(
         detail=True,
@@ -252,8 +231,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         """Добавить или удалить рецепт из избранного."""
         return self._handle_recipe_list_action(
-            request, pk, Favorite, FavoriteSerializer,
-            'Рецепт уже есть в избранном.', 'Рецепта нет в избранном.'
+            request, pk, Favorite, FavoriteSerializer
         )
 
     @action(
@@ -262,7 +240,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        """Download shopping list as text file."""
+        """Скачать список покупок в виде текстового файла."""
         ingredients = RecipeIngredient.objects.filter(
             recipe__shopping_carts__user=request.user
         ).values(
@@ -286,7 +264,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.AllowAny]
     )
     def short_link(self, request, pk=None):
-        """Get short link for recipe."""
+        """Короткая ссылка на рецепт."""
         recipe = get_object_or_404(Recipe, pk=pk)
         return Response(
             {'short_link': request.build_absolute_uri(

@@ -11,6 +11,7 @@ validate_name = RegexValidator(
 
 
 def validate_password(serializer, data):
+    """Проверка длины пароля."""
     if len(data['password']) < PASS:
         raise ValidationError("Пароль слишком короткий")
     return data

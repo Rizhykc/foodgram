@@ -10,7 +10,7 @@ class UserAccountManager(BaseUserManager):
     def _initialize_user(
             self, email, username, first_name, last_name, password
     ):
-        """Инициализация нового пользовательского аккаунта"""
+        """Инициализация нового пользовательского аккаунта."""
         return self.model(
             email=email,
             username=username,
@@ -20,7 +20,7 @@ class UserAccountManager(BaseUserManager):
         )
 
     def _validate_credentials(self, email):
-        """Проверка обязательных учетных данных"""
+        """Проверка обязательных учетных данных."""
         if not email:
             raise ValidationError('Требуется указать email')
         return self.normalize_email(email)
@@ -30,7 +30,7 @@ class UserAccountManager(BaseUserManager):
     ):
         """
             Регистрация нового пользователя в системе
-            с указанными учетными данными
+            c указанными учетными данными.
         """
         processed_email = self._validate_credentials(email)
         new_user = self._initialize_user(

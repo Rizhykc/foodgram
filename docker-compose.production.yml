@@ -1,7 +1,7 @@
 volumes:
-  media: null
-  pg_data: null
-  static: null
+  media:
+  pg_data:
+  static:
 
 services:
 
@@ -38,4 +38,4 @@ services:
       - static:/staticfiles
       - /var/www/foodgram/media/:/app/media/
     ports:
-      - 7000:80
+      - 8000:80
