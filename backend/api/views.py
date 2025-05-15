@@ -6,6 +6,7 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from api.filters import IngredientFilter, RecipeFilter
 from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (AvatarSerializer, CustomUserCreateSerializer,
@@ -14,7 +15,6 @@ from api.serializers import (AvatarSerializer, CustomUserCreateSerializer,
                              RecipeReadSerializer, RecipeWriteSerializer,
                              SubscriptionGetSerializer, SubscriptionSerializer,
                              TagSerializer)
-from api.filters import IngredientFilter, RecipeFilter
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import CustomUser, Subscription
 
@@ -122,8 +122,8 @@ class UserViewSet(
             )
         elif request.method == 'DELETE':
             deleted_count, _ = Subscription.objects.filter(
-                subscriber=user,
-                author=author
+                author=author,
+                user=user,
             ).delete()
             if not deleted_count:
                 return Response(
@@ -167,11 +167,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if user.is_authenticated:
             queryset = queryset.annotate(
                 is_favorited=Exists(
-                    Favorite.objects.filter(recipe=OuterRef('pk'), user=user)
+                    user.favorites.filter(recipe_id=OuterRef('pk'))
                 ),
                 is_in_shopping_cart=Exists(
-                    ShoppingCart.objects.filter(recipe=OuterRef('pk'),
-                                                user=user)
+                    user.shopping_carts.filter(recipe_id=OuterRef('pk'))
                 ),
             )
         return queryset

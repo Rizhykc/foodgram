@@ -6,11 +6,10 @@ from djoser.serializers import UserCreateSerializer as CreateSerializer
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
-from api.validators import (validate_amount, validate_favorite,
-                            validate_password, validate_recipe,
-                            validate_shopping_cart,
+from api.validators import (validate_favorite, validate_password,
+                            validate_recipe, validate_shopping_cart,
                             validate_subscription)
-from foodgram.constants import MAX_IMAGES, MIN_UNIT, NULL, PASS
+from foodgram.constants import MAX_IMAGES, MAX_UNIT, MIN_UNIT, NULL, PASS
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import CustomUser, Subscription
@@ -115,14 +114,11 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления ингредиентов в рецепт."""
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField(min_value=MIN_UNIT)
+    amount = serializers.IntegerField(min_value=MIN_UNIT, max_value=MAX_UNIT)
 
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'amount')
-
-    def validate_amount(self, value):
-        return validate_amount(self, value)
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
@@ -154,7 +150,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(), many=True
     )
     image = Base64ImageField()
-    cooking_time = serializers.IntegerField(min_value=MIN_UNIT)
+    cooking_time = serializers.IntegerField(min_value=MIN_UNIT,
+                                            max_value=MAX_UNIT)
 
     class Meta:
         model = Recipe

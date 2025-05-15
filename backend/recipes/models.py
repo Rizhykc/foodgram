@@ -1,8 +1,8 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from foodgram.constants import (MAX_NAME_LENGTH, MAX_TAG, MAX_UNIT, MIN_UNIT,
-                                NAME_INGR, SHORT_LINK)
+from foodgram.constants import (MAX_LEN, MAX_NAME_LENGTH, MAX_TAG, MAX_UNIT,
+                                MIN_UNIT, NAME_INGR, SHORT_LINK)
 from users.models import CustomUser
 
 
@@ -35,7 +35,7 @@ class Ingredient(models.Model):
         verbose_name='Название ингридиента'
     )
     measurement_unit = models.CharField(
-        max_length=MAX_UNIT,
+        max_length=MAX_LEN,
         verbose_name='Еденицы измерения'
     )
 
@@ -83,7 +83,8 @@ class Recipe(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(MIN_UNIT,)],
+        validators=[MinValueValidator(MIN_UNIT,),
+                    MaxValueValidator(MAX_UNIT,)],
         verbose_name='Время приготовления в минутах'
     )
     pub_date = models.DateTimeField(
@@ -121,7 +122,8 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
     )
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(MIN_UNIT,)],
+        validators=[MinValueValidator(MIN_UNIT,),
+                    MaxValueValidator(MAX_UNIT,)],
         verbose_name='Количество ингредиентов'
     )
 
