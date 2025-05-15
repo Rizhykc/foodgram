@@ -15,7 +15,7 @@ from api.serializers import (AvatarSerializer, CustomUserCreateSerializer,
                              RecipeReadSerializer, RecipeWriteSerializer,
                              SubscriptionGetSerializer, SubscriptionSerializer,
                              TagSerializer)
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import Favorite, Ingredient, Recipe, Tag
 from users.models import CustomUser, Subscription
 
 

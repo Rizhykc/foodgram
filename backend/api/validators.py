@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
-from foodgram.constants import MIN_UNIT, PASS
+from foodgram.constants import PASS
 
 validate_name = RegexValidator(
     regex=r'^[А-Яа-яЁёA-Za-z]+$',
@@ -22,7 +22,7 @@ def validate_subscription(serializer, data):
     from users.models import Subscription
     user = data['user']
     author = data['author']
-    if user == author:  
+    if user == author:
         raise ValidationError('Нельзя подписаться на самого себя')
     if Subscription.objects.filter(user=user, author=author).exists():
         raise ValidationError('Вы уже подписались на этого автора')
