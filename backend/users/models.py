@@ -2,9 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
+from api.validators import validate_name
 from foodgram.constants import MAX_TEXT_LENGTH, TEXT_LENGTH
 from users.manager import UserAccountManager
-from users.validators import validate_name
 
 
 class CustomUser(AbstractUser):

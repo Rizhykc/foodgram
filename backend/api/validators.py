@@ -1,12 +1,25 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
-from foodgram.constants import MIN_UNIT
-from recipes.models import Favorite, Recipe, ShoppingCart
-from users.models import Subscription
+from foodgram.constants import MIN_UNIT, PASS
+
+validate_name = RegexValidator(
+    regex=r'^[А-Яа-яЁёA-Za-z]+$',
+    message='Поле должно содержать только буквы',
+    code='invalid_name',
+)
+
+
+def validate_password(serializer, data):
+    """Проверка длины пароля."""
+    if len(data['password']) < PASS:
+        raise ValidationError("Пароль слишком короткий")
+    return data
 
 
 def validate_subscription(serializer, data):
     """Проверяет возможность подписки."""
+    from users.models import Subscription
     user = data['user']
     author = data['author']
     if user == author:
@@ -18,6 +31,7 @@ def validate_subscription(serializer, data):
 
 def validate_recipe(serializer, data):
     """Проверяет корректное создание рецепта."""
+    from recipes.models import Recipe
     ingredients = data.get('ingredients', [])
     if not ingredients:
         raise ValidationError(
@@ -54,6 +68,7 @@ def validate_recipe(serializer, data):
 
 def validate_shopping_cart(serializer, data):
     """Проверяет возможность добавления в корзину."""
+    from recipes.models import ShoppingCart
     user = data['user']
     recipe = data['recipe']
     if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
@@ -69,6 +84,7 @@ def validate_amount(serializer, data):
 
 
 def validate_favorite(serializer, data):
+    from recipes.models import Favorite
     """Проверяет возможность добавления в избранное."""
     if Favorite.objects.filter(**data).exists():
         raise ValidationError(
